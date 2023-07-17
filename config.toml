@@ -1,0 +1,17 @@
+[aws]
+# The name of the AWS profile to use. Refer to the AWS SDK on how to use
+# multiple profiles. Defaults to "default".
+# profile_name = ""
+
+# The URL to use as the endpoint for all operations.
+# endpoint_url = ""
+
+[aws.s3]
+# The name of the bucket where files will be uploaded to.
+bucket_name = "some-bucket"
+
+# Prefix to apply to the key of the file to upload.
+# key_prefix = ""
+
+# The public base url to put into the clipboard when files have been uploaded.
+public_url = ""
