@@ -2,6 +2,7 @@ use std::env;
 
 use aws_sdk_s3 as s3;
 use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::types::ObjectCannedAcl;
 use clap::Parser;
 use directories::ProjectDirs;
 use miette::{IntoDiagnostic, Result, WrapErr};
@@ -76,6 +77,7 @@ async fn main() -> Result<()> {
             let resp = client
                 .put_object()
                 .bucket(&s3_config.bucket_name)
+                .acl(ObjectCannedAcl::PublicRead)
                 .key(&key)
                 .content_type(content_type.as_ref())
                 .content_disposition(content_disposition)
