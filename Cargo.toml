@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 aws-config = { version = "0.55.3", default-features = false, features = ["client-hyper", "rustls", "rt-tokio"] }
-aws-sdk-s3 = "0.28.0"
+aws-sdk-s3 = "0.29.0"
 clap = { version = "4.3.21", features = ["derive", "env"] }
 directories = "5.0.1"
 dirs = "5.0.1"
