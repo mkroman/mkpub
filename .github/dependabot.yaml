@@ -6,6 +6,10 @@ updates:
   directory: "/"
   schedule:
     interval: "weekly"
+  groups:
+    aws-sdk:
+      patterns:
+      - 'aws-*'
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
