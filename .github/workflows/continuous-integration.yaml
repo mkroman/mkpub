@@ -17,16 +17,13 @@ permissions:
 jobs:
   # We have individual jobs for the stable and nightly toolchains as this lets
   # us run the pipelines in parallel so one can proceed even if the other fails.
-  check-and-test-nightly:
-    uses: ./.github/workflows/check_and_test.yaml
+  check-and-test:
+    name: Clippy and Tests
+    strategy:
+      matrix:
+        rust: [stable, nightly]
+    uses: ./.github/workflows/clippy_and_tests.yaml
     with:
-      toolchain: nightly
-    secrets:
-      codecov-token: ${{ secrets.CODECOV_TOKEN }}
-
-  check-and-test-stable:
-    uses: ./.github/workflows/check_and_test.yaml
-    with:
-      toolchain: stable
+      toolchain: ${{ matrix.rust }}
     secrets:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
