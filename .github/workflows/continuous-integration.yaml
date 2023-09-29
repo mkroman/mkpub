@@ -1,8 +1,10 @@
+name: Continuous Integration
+
 on:
-  push:
+  pull_request:
     branches:
     - main
-  pull_request:
+  push:
     branches:
     - main
   workflow_dispatch:
@@ -20,7 +22,6 @@ jobs:
     strategy:
       matrix:
         rust: [stable, nightly]
-      fail-fast: false
     uses: ./.github/workflows/clippy_and_tests.yaml
     with:
       toolchain: ${{ matrix.rust }}
