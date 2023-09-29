@@ -1,0 +1,97 @@
+on:
+  workflow_call:
+    inputs:
+      toolchain:
+        description: Rust toolchain to install and use
+        type: string
+        required: true
+      profile:
+        description: Rust toolchain profile to install
+        type: string
+        default: minimal
+
+    secrets:
+      codecov-token:
+        description: Codecov access token
+        required: true
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    env:
+      RUST_PROFILE: ${{ inputs.profile }}
+      RUST_TOOLCHAIN: ${{ inputs.toolchain }}
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+    - name: Install Rust ${{ inputs.profile }}
+      run: |
+        rustup install "${RUST_TOOLCHAIN}" --profile "${RUST_PROFILE}"
+        rustup default "${RUST_TOOLCHAIN}"
+    - name: Cache Cargo
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/
+          target/
+        key: ${{ runner.os }}-cargo-${{ inputs.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-${{ inputs.toolchain }}-
+    - name: Run Clippy check
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ github.token }}
+        args: --all-features
+        name: Clippy (${{ env.RUST_TOOLCHAIN }})
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    env:
+      RUST_PROFILE: ${{ inputs.profile }}
+      RUST_TOOLCHAIN: ${{ inputs.toolchain }}
+    needs:
+    - check
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+    - name: Install Rust ${{ inputs.profile }}
+      run: |
+        rustup install "${RUST_TOOLCHAIN}" --profile "${RUST_PROFILE}"
+        rustup default "${RUST_TOOLCHAIN}"
+    - name: Cache Cargo
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/
+          target/
+        key: ${{ runner.os }}-cargo-${{ inputs.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-${{ inputs.toolchain }}-
+    - name: Run build
+      env:
+        RUSTFLAGS: -C instrument-coverage
+      run: cargo build --all-features
+    - name: Run tests
+      env:
+        RUSTFLAGS: -C instrument-coverage
+        LLVM_PROFILE_FILE: "coverage-%p-%m.profraw"
+      run: cargo test --all-features
+    - name: Download grcov
+      run: curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
+    - name: Parse and aggregate coverage report
+      run: |
+        ls -al; \
+        ./grcov "$(find . -name "coverage-*.profraw" -print)" \
+          --binary-path ./target/debug \
+          -t lcov \
+          -o lcov.info
+    - name: Upload code coverage report
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./lcov.info
+        flags: rust-${{ inputs.toolchain }}
+        token: ${{ secrets.codecov-token }}
