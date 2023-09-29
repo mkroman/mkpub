@@ -22,6 +22,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable, nightly]
+      fail-fast: false
     uses: ./.github/workflows/clippy_and_tests.yaml
     with:
       toolchain: ${{ matrix.rust }}
