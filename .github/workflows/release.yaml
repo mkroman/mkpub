@@ -18,9 +18,12 @@ jobs:
       run: |
         rustup install stable --profile default
         rustup default stable
-    - name: Run build
-      run: |
-        cargo build --release
+    - name: Build in release mode
+      run: cargo build --release
+    - name: Publish crate
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: cargo publish
     - name: Upload build artifact
       uses: actions/upload-artifact@v3
       with:
