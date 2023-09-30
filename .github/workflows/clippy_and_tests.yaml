@@ -34,11 +34,14 @@ jobs:
       with:
         path: |
           ~/.cargo/bin/
-          ~/.cargo/registry/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
           target/
-        key: ${{ runner.os }}-cargo-${{ inputs.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-clippy-${{ inputs.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
+          ${{ runner.os }}-cargo-${{ inputs.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
           ${{ runner.os }}-cargo-${{ inputs.toolchain }}-
+          ${{ runner.os }}-clippy-${{ inputs.toolchain }}-
     - name: Run Clippy check
       uses: actions-rs/clippy-check@v1
       with:
@@ -66,7 +69,8 @@ jobs:
       with:
         path: |
           ~/.cargo/bin/
-          ~/.cargo/registry/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
           target/
         key: ${{ runner.os }}-cargo-${{ inputs.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
