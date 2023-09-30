@@ -61,7 +61,10 @@ async fn main() -> Result<()> {
     let engine = script::build_engine();
 
     // Precompile the program AST so we can evaluate it faster.
-    let ast = engine.compile_file(PathBuf::from("program.rhai")).unwrap();
+    let script_path = opts
+        .script_path
+        .unwrap_or(proj_dirs.config_dir().join("program.rhai"));
+    let ast = engine.compile_file(script_path).unwrap();
 
     match body {
         Ok(b) => {

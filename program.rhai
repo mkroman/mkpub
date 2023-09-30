@@ -1,3 +1,4 @@
+// List of file categories mapped to mime types.
 const MIME_TYPES = #{
     image: [
         "image/jpeg",
