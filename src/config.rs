@@ -37,7 +37,6 @@ pub struct AwsConfig {
 #[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct AwsS3Config {
     pub bucket_name: String,
-    pub key_prefix: Option<String>,
     pub public_url: Option<Url>,
 }
 
