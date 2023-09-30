@@ -1,19 +1,23 @@
 use std::env;
+use std::path::PathBuf;
 
-use aws_sdk_s3 as s3;
+use aws_sdk_s3 as aws_s3;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::types::ObjectCannedAcl;
 use clap::Parser;
 use directories::ProjectDirs;
 use miette::{IntoDiagnostic, Result, WrapErr};
+use rhai::Scope;
 use tracing::debug;
 
 use config::Config;
-use error::Error;
+pub use error::Error;
+use script::ScriptablePutObject;
 
 mod cli;
 mod config;
 mod error;
+mod script;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
@@ -39,8 +43,6 @@ async fn main() -> Result<()> {
     let aws_config = &config.aws_config;
     let s3_config = &aws_config.s3_config;
 
-    let key_prefix = s3_config.key_prefix.clone().unwrap_or(String::new());
-
     let mut shared_config = aws_config::from_env();
 
     if let Some(ref profile_name) = aws_config.profile_name {
@@ -53,38 +55,52 @@ async fn main() -> Result<()> {
 
     let shared_config = shared_config.load().await;
 
-    let client = s3::Client::new(&shared_config);
+    let client = aws_s3::Client::new(&shared_config);
     let body = ByteStream::from_path(&opts.path).await;
-    let key = format!(
-        "{}{}",
-        key_prefix,
-        &opts
-            .path
-            .file_name()
-            .expect("no filename")
-            .to_string_lossy()
-    );
+
+    let engine = script::build_engine();
+
+    // Precompile the program AST so we can evaluate it faster.
+    let ast = engine.compile_file(PathBuf::from("program.rhai")).unwrap();
 
     match body {
         Ok(b) => {
-            let content_type = mime_guess::from_path(&opts.path).first_or_octet_stream();
-            let content_disposition: &str = match content_type.essence_str() {
-                "image/jpeg" | "image/png" | "image/gif" | "image/svg" => "inline",
-                "text/plain" => "inline",
-                _ => "attachment",
-            };
-            debug!(?content_type);
-            let resp = client
+            // Create a scope for each run of the script.
+            let mut scope = Scope::new();
+
+            let object = ScriptablePutObject::default();
+
+            scope.push("object", object).push("path", opts.path.clone());
+
+            // Run the script with the new scope.
+            engine.run_ast_with_scope(&mut scope, &ast).unwrap();
+
+            let updated_object = scope.get_value::<ScriptablePutObject>("object").unwrap();
+            debug!(?updated_object);
+
+            let mut put_object = client
                 .put_object()
                 .bucket(&s3_config.bucket_name)
-                .acl(ObjectCannedAcl::PublicRead)
-                .key(&key)
-                .content_type(content_type.as_ref())
-                .content_disposition(content_disposition)
-                .body(b)
-                .send()
-                .await
-                .into_diagnostic()?;
+                .acl(ObjectCannedAcl::PublicRead);
+
+            let mut key = Option::None;
+
+            if let Some(updated_key) = updated_object.key {
+                key = Some(updated_key.clone());
+                put_object = put_object.key(updated_key);
+            }
+
+            if let Some(content_type) = updated_object.content_type {
+                put_object = put_object.content_type(content_type);
+            }
+
+            if let Some(content_disposition) = updated_object.content_disposition {
+                put_object = put_object.content_disposition(content_disposition);
+            } else {
+                put_object = put_object.content_disposition("attachment");
+            }
+
+            let resp = put_object.body(b).send().await.into_diagnostic()?;
 
             debug!(?resp);
 
@@ -93,7 +109,7 @@ async fn main() -> Result<()> {
                 .as_ref()
                 .or(aws_config.endpoint_url.as_ref())
                 .expect("could not derive public url");
-            let url_with_path = url.join(&key).into_diagnostic()?;
+            let url_with_path = url.join(key.unwrap().as_str()).into_diagnostic()?;
 
             println!("{url_with_path}");
         }

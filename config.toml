@@ -10,8 +10,5 @@
 # The name of the bucket where files will be uploaded to.
 bucket_name = "some-bucket"
 
-# Prefix to apply to the key of the file to upload.
-# key_prefix = ""
-
 # The public base url to put into the clipboard when files have been uploaded.
 public_url = ""
