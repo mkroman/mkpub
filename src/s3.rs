@@ -36,7 +36,6 @@ pub struct Batch {
 
 impl Batch {
     /// Constructs a new and empty [`Batch`].
-    #[allow(dead_code)]
     pub fn new() -> Self {
         Batch {
             files: vec![],
@@ -66,15 +65,6 @@ impl Batch {
         }
 
         Ok(())
-    }
-}
-
-impl From<Vec<PathBuf>> for Batch {
-    fn from(paths: Vec<PathBuf>) -> Self {
-        Batch {
-            files: paths,
-            size: 0,
-        }
     }
 }
 
