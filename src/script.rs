@@ -43,7 +43,7 @@ impl ScriptablePutObject {
     }
 
     pub fn get_key(&mut self) -> ImmutableString {
-        self.key.clone().unwrap_or(String::new()).into()
+        self.key.clone().unwrap_or_default().into()
     }
 
     pub fn set_key(&mut self, value: ImmutableString) {

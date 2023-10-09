@@ -26,7 +26,7 @@ pub struct Config {
     pub aws_config: AwsConfig,
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize)]
 pub struct AwsConfig {
     pub profile_name: Option<String>,
     pub endpoint_url: Option<Url>,
@@ -34,7 +34,7 @@ pub struct AwsConfig {
     pub s3_config: AwsS3Config,
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize)]
 pub struct AwsS3Config {
     pub bucket_name: String,
     pub public_url: Option<Url>,

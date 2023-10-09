@@ -17,20 +17,29 @@ use script::ScriptablePutObject;
 mod cli;
 mod config;
 mod error;
+mod s3;
 mod script;
 
-async fn load_aws_sdk_config(app_aws_config: &config::AwsConfig) -> aws_config::SdkConfig {
-    let mut sdk_config = aws_config::from_env();
+#[derive(Clone, Debug)]
+pub struct Context {
+    pub s3_client: aws_s3::Client,
+    pub aws_config: config::AwsConfig,
+}
 
+async fn load_aws_config(app_aws_config: &config::AwsConfig) -> aws_config::SdkConfig {
+    let mut config_loader = aws_config::from_env();
+
+    // Override the profile name to load.
     if let Some(ref profile_name) = app_aws_config.profile_name {
-        sdk_config = sdk_config.profile_name(profile_name);
+        config_loader = config_loader.profile_name(profile_name);
     }
 
+    // Override the endpoint URL for all AWS services if provided.
     if let Some(ref endpoint_url) = app_aws_config.endpoint_url {
-        sdk_config = sdk_config.endpoint_url(endpoint_url.as_str());
+        config_loader = config_loader.endpoint_url(endpoint_url.as_str());
     }
 
-    sdk_config.load().await
+    config_loader.load().await
 }
 
 fn init_tracing() {
@@ -66,10 +75,13 @@ async fn main() -> Result<()> {
         .with_context(|| format!("Loading configuration file `{}'", config_path.display()))?;
 
     // Prepare the AWS S3 client.
-    let app_aws_config = &config.aws_config;
-    let s3_config = &app_aws_config.s3_config;
-    let sdk_config = load_aws_sdk_config(app_aws_config).await;
-    let client = aws_s3::Client::new(&sdk_config);
+    let sdk_config = load_aws_config(&config.aws_config).await;
+    let s3_client = aws_s3::Client::new(&sdk_config);
+    let ctx = Context {
+        s3_client,
+        aws_config: config.aws_config,
+    };
+    let s3_config = ctx.aws_config.s3_config;
 
     // Initialize the scripting engine.
     let engine = script::build_engine();
@@ -89,10 +101,17 @@ async fn main() -> Result<()> {
 
     trace!(elapsed = ?start.elapsed(), "script compiled");
 
-    // Upload the provided files.
+    let mut batch = s3::Batch::from(opts.paths.clone());
+
+    // Add files to the upload batch.
     for path in &opts.paths {
+        batch.add(path)?;
+    }
+
+    // Upload the provided files.
+    for path in batch.files() {
         // Upload the provided file.
-        let body = ByteStream::from_path(path).await;
+        let body = ByteStream::from_path(&path).await;
 
         match body {
             Ok(b) => {
@@ -109,7 +128,8 @@ async fn main() -> Result<()> {
                 let updated_object = scope.get_value::<ScriptablePutObject>("object").unwrap();
                 debug!(?updated_object);
 
-                let mut put_object = client
+                let mut put_object = ctx
+                    .s3_client
                     .put_object()
                     .bucket(&s3_config.bucket_name)
                     .acl(ObjectCannedAcl::PublicRead);
@@ -138,7 +158,7 @@ async fn main() -> Result<()> {
                 let url = s3_config
                     .public_url
                     .as_ref()
-                    .or(app_aws_config.endpoint_url.as_ref())
+                    .or(ctx.aws_config.endpoint_url.as_ref())
                     .expect("could not derive public url");
                 let url_with_path = url.join(key.unwrap().as_str()).into_diagnostic()?;
 
