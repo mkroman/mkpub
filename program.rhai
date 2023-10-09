@@ -23,8 +23,8 @@ fn is_image(mime_type) {
     return global::MIME_TYPES.image.contains(mime_type);
 }
 
-// Use a prefix for all object keys.
-let prefix = "~mk/";
+// Optional prefix for all object keys.
+let prefix = "";
 
 // Guess the mime type of the file based on the name.
 let mime_type = mime::guess_from_path(path);

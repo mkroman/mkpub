@@ -1,5 +1,7 @@
 //! Application errors
 
+use std::io;
+
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -11,4 +13,8 @@ pub enum Error {
         help("this could mean your platform is not supported")
     )]
     ProjectDirs,
+    #[error("The given path is not a valid file")]
+    InvalidFile,
+    #[error("I/O error")]
+    IoError(#[from] io::Error),
 }
