@@ -87,29 +87,31 @@ async fn main() -> Result<()> {
     let engine = script::build_engine();
 
     // Precompile the program AST so we can evaluate it faster.
-    let script_path = opts
-        .script_path
-        .unwrap_or(proj_dirs.config_dir().join("program.rhai"));
-
-    trace!(
-        script_path = %script_path.display(),
-        "compiling rhai script"
-    );
-
     let start = Instant::now();
-    let ast = engine.compile_file(script_path).unwrap();
+    let ast = if let Some(script_path) = opts.script_path {
+        trace!(
+            script_path = %script_path.display(),
+            "compiling rhai script"
+        );
 
+        engine.compile_file(script_path).unwrap()
+    } else {
+        engine.compile(script::DEFAULT_RHAI_PROGRAM).unwrap()
+    };
     trace!(elapsed = ?start.elapsed(), "script compiled");
 
-    let mut batch = s3::Batch::from(opts.paths.clone());
+    let mut batch = s3::Batch::new();
 
     // Add files to the upload batch.
     for path in &opts.paths {
+        debug!(path = %path.display(), "adding file to batch");
         batch.add(path)?;
     }
 
     // Upload the provided files.
     for path in batch.files() {
+        trace!(path = %path.display(), "processing batch file");
+
         // Upload the provided file.
         let body = ByteStream::from_path(&path).await;
 

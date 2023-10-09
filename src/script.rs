@@ -6,6 +6,9 @@ use rhai::plugin::*;
 use rhai::{CustomType, Engine, ImmutableString, TypeBuilder};
 use tracing::{instrument, trace};
 
+/// The default Rhai program to use when the user hasn't provided their own.
+pub const DEFAULT_RHAI_PROGRAM: &str = include_str!("../program.rhai");
+
 #[export_module]
 mod path_module {
     /// Returns the file name for the given `path`.
