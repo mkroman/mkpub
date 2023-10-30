@@ -13,7 +13,7 @@ exclude = ["/.github"]
 
 [dependencies]
 aws-config = { version = "0.56.1", default-features = false, features = ["client-hyper", "rustls", "rt-tokio"] }
-aws-sdk-s3 = "0.33.0"
+aws-sdk-s3 = "0.34.0"
 clap = { version = "4.4.6", features = ["derive", "env"] }
 directories = "5.0.1"
 miette = { version = "5.10.0", features = ["fancy"] }
