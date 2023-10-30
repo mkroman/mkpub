@@ -22,7 +22,7 @@ rhai = "1.16.2"
 serde = { version = "1.0.189", features = ["derive"] }
 thiserror = "1.0.50"
 tokio = { version = "1.32.0", features = ["rt", "macros"] }
-toml = "0.8.2"
+toml = "0.8.6"
 tracing = "0.1.39"
 tracing-subscriber = "0.3.17"
 url = { version = "2.4.1", features = ["serde"] }
