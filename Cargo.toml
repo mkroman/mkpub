@@ -18,7 +18,7 @@ clap = { version = "4.4.7", features = ["derive", "env"] }
 directories = "5.0.1"
 miette = { version = "5.10.0", features = ["fancy"] }
 mime_guess = "2.0.4"
-rhai = "1.16.2"
+rhai = "1.16.3"
 serde = { version = "1.0.190", features = ["derive"] }
 thiserror = "1.0.50"
 tokio = { version = "1.32.0", features = ["rt", "macros"] }
