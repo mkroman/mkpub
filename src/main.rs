@@ -69,6 +69,10 @@ async fn main() -> Result<()> {
     let config_path = opts
         .config_path
         .unwrap_or(proj_dirs.config_dir().join("config.toml"));
+    let config_dir = config_path
+        .parent()
+        .ok_or(Error::ProjectDirs)
+        .with_context(|| "Could not open parent dir")?;
 
     trace!(config_path = %config_path.display(), "loading configuration");
     let config = Config::load_path(&config_path)
@@ -85,17 +89,28 @@ async fn main() -> Result<()> {
 
     // Initialize the scripting engine.
     let engine = script::build_engine();
+    let script_path = opts.script_path.or_else(|| {
+        let possible_script_path = config_dir.join("program.rhai");
+
+        if possible_script_path.exists() {
+            Some(possible_script_path)
+        } else {
+            None
+        }
+    });
 
     // Precompile the program AST so we can evaluate it faster.
     let start = Instant::now();
-    let ast = if let Some(script_path) = opts.script_path {
+    let ast = if let Some(script_path) = script_path {
         trace!(
             script_path = %script_path.display(),
-            "compiling rhai script"
+            "compiling local rhai script"
         );
 
         engine.compile_file(script_path).unwrap()
     } else {
+        trace!("compiling embedded rhai script");
+
         engine.compile(script::DEFAULT_RHAI_PROGRAM).unwrap()
     };
     trace!(elapsed = ?start.elapsed(), "script compiled");
