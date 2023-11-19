@@ -6,7 +6,7 @@ repository = "https://github.com/mkroman/mkpub"
 categories = ["command-line-utilities"]
 license = "MIT OR Apache-2.0"
 keywords = ["aws", "s3"]
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 exclude = ["/.github"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
