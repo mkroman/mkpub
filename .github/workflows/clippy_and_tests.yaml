@@ -30,7 +30,7 @@ jobs:
         rustup install "${RUST_TOOLCHAIN}" --profile "${RUST_PROFILE}"
         rustup default "${RUST_TOOLCHAIN}"
     - name: Cache Cargo
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -65,7 +65,7 @@ jobs:
         rustup install "${RUST_TOOLCHAIN}" --profile "${RUST_PROFILE}"
         rustup default "${RUST_TOOLCHAIN}"
     - name: Cache Cargo
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
