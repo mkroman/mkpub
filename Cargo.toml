@@ -16,7 +16,7 @@ aws-config = { version = "1.1", default-features = false, features = ["client-hy
 aws-sdk-s3 = "1.11"
 clap = { version = "4.4.8", features = ["derive", "env"] }
 directories = "5.0.1"
-miette = { version = "7.1.0", features = ["fancy"] }
+miette = { version = "7.2.0", features = ["fancy"] }
 mime_guess = "2.0.4"
 rhai = "1.16.3"
 serde = { version = "1.0.193", features = ["derive"] }
