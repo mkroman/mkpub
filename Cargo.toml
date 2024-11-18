@@ -19,7 +19,7 @@ directories = "5.0.1"
 miette = { version = "7.2.0", features = ["fancy"] }
 mime_guess = "2.0.5"
 rhai = "1.19.0"
-serde = { version = "1.0.210", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 thiserror = "1.0.64"
 tokio = { version = "1.40.0", features = ["rt", "macros"] }
 toml = "0.8.19"
